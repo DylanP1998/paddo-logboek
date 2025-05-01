@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <title>Paddo Voorraad & Verkoop Logboek</title>
+  <style>
+    /* Algemeen */
+    body {
+      font-family: 'Arial', sans-serif;
+      background-color: #f4f4f9;
+      margin: 0;
+      padding: 0;
+      color: #333;
+    }
+    h2, h3 {
+      color: #4CAF50;
+    }
+    h2 {
+      margin-top: 40px;
+    }
+    h3 {
+      margin-top: 20px;
+    }
+    
+    /* Hoofdcontainer */
+    .container {
+      width: 80%;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #fff;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Formulieren */
+    form {
+      margin-bottom: 20px;
+      background-color: #f9f9f9;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+    input[type="date"], input[type="number"] {
+      padding: 8px;
+      margin: 10px 0;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    button {
+      background-color: #4CAF50;
+      color: white;
+      padding: 10px 15px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: background-color 0.3s;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+
+    /* Tabel */
+    table {
+      width: 100%;
+      margin-top: 20px;
+      border-collapse: collapse;
+      background-color: #fafafa;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    th, td {
+      padding: 12px;
+      text-align: center;
+    }
+    th {
+      background-color: #4CAF50;
+      color: white;
+    }
+    td {
+      border-top: 1px solid #ddd;
+    }
+    .remove-btn {
+      color: red;
+      cursor: pointer;
+      font-weight: bold;
+      transition: color 0.3s;
+    }
+    .remove-btn:hover {
+      color: darkred;
+    }
+
+    /* Informatie sectie */
+    .info-section {
+      background-color: #e8f5e9;
+      padding: 15px;
+      border-radius: 8px;
+      margin-top: 20px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h2>?? Paddo Productie (Toevoegen aan Voorraad)</h2>
+  <form id="productieForm">
+    Datum: <input type="date" id="prodDatum" required>
+    Aantal geproduceerde stuks: <input type="number" id="prodAantal" required>
+    <button type="submit">Toevoegen aan voorraad</button>
+  </form>
+
+  <h2>?? Paddo Verkoop</h2>
+  <form id="verkoopForm">
+    Datum: <input type="date" id="verkoopDatum" required>
+    Aantal verkochte stuks: <input type="number" id="verkoopAantal" required>
+    <button type="submit">Verkopen</button>
+  </form>
+
+  <h3>Logboek</h3>
+  <table id="logTabel">
+    <tr>
+      <th>Datum</th><th>Type</th><th>Item</th><th>Aantal</th><th>Prijs per stuk</th><th>Omzet</th><th>Acties</th>
+    </tr>
+  </table>
+
+  <h3>?? Overzicht</h3>
+  <div class="info-section">
+    <p id="voorraadInfo"></p>
+    <p id="omzetInfo"></p>
+  </div>
+</div>
+
+<script>
+  const productieForm = document.getElementById('productieForm');
+  const verkoopForm = document.getElementById('verkoopForm');
+  const logTabel = document.getElementById('logTabel');
+  const voorraadInfo = document.getElementById('voorraadInfo');
+  const omzetInfo = document.getElementById('omzetInfo');
+
+  let voorraad = 0;
+  let totaleOmzet = 0;
+  let totaalVerkocht = 0;
+  const VERKOOPPRIJS = 8000;
+
+  // Productie formulier
+  productieForm.addEventListener('submit', function(e) {
+    e.preventDefault();
+    const datum = document.getElementById('prodDatum').value;
+    const aantal = parseInt(document.getElementById('prodAantal').value);
+
+    voorraad += aantal;
+
+    // Voeg toe aan logboek
+    const row = logTabel.insertRow();
+    row.innerHTML = `<td>${datum}</td><td>Productie</td><td>Paddo</td><td>${aantal}</td><td>-</td><td>-</td><td><span class="remove-btn" onclick="verwijderRegel(this, 'productie', ${aantal}, 0)">Verwijder</span></td>`;
+
+    updateInfo();
+    productieForm.reset();
+  });
+
+  // Verkoop formulier
+  verkoopForm.addEventListener('submit', function(e) {
+    e.preventDefault();
+    const datum = document.getElementById('verkoopDatum').value;
+    const aantal = parseInt(document.getElementById('verkoopAantal').value);
+
+    if (aantal > voorraad) {
+      alert("Niet genoeg voorraad! Voeg eerst meer toe via productie.");
+      return;
+    }
+
+    const omzet = VERKOOPPRIJS * aantal;
+    voorraad -= aantal;
+    totaleOmzet += omzet;
+    totaalVerkocht += aantal;
+
+    // Voeg toe aan logboek
+    const row = logTabel.insertRow();
+    row.innerHTML = `<td>${datum}</td><td>Verkoop</td><td>Paddo</td><td>${aantal}</td><td>€${VERKOOPPRIJS.toLocaleString()}</td><td>€${omzet.toLocaleString()}</td><td><span class="remove-btn" onclick="verwijderRegel(this, 'verkoop', ${aantal}, ${omzet})">Verwijder</span></td>`;
+
+    updateInfo();
+    verkoopForm.reset();
+  });
+
+  // Verwijderen van logboekregel
+  function verwijderRegel(btn, type, aantal, omzet) {
+    const row = btn.parentNode.parentNode;
+    logTabel.deleteRow(row.rowIndex);
+
+    if (type === 'productie') {
+      voorraad -= aantal;
+    } else if (type === 'verkoop') {
+      voorraad += aantal;
+      totaleOmzet -= omzet;
+      totaalVerkocht -= aantal;
+    }
+
+    updateInfo();
+  }
+
+  // Update informatie over voorraad en omzet
+  function updateInfo() {
+    voorraadInfo.innerHTML = `<strong>Huidige voorraad:</strong> ${voorraad} stuks<br>
+                              <strong>Totaal verkocht:</strong> ${totaalVerkocht} stuks`;
+    omzetInfo.innerHTML = `<strong>Totaal omzet:</strong> €${totaleOmzet.toLocaleString()}`;
+  }
+</script>
+
+</body>
+</html>
